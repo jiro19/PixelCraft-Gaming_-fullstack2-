@@ -10,9 +10,8 @@ const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
   const [error, setError] = useState(null);
   const [filtro, setFiltro] = useState('');
 
-  // Petición a la API PHP de XAMPP al montar el componente
   useEffect(() => {
-    fetch('http://localhost:3308/pixelcraft-api/obtener_productos.php')
+    fetch('http://localhost/pixelcraft-api/obtener_productos.php')
       .then((res) => {
         if (!res.ok) {
           throw new Error('Error en la respuesta del servidor');
@@ -20,7 +19,14 @@ const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
         return res.json();
       })
       .then((data) => {
-        setProductos(data);
+        // Mapeo para asegurar que precio e id sean numéricos
+        const productosFormateados = data.map((p) => ({
+          ...p,
+          id: Number(p.id),
+          precio: Number(p.precio),
+          stock: Number(p.stock)
+        }));
+        setProductos(productosFormateados);
         setCargando(false);
       })
       .catch((err) => {
@@ -56,7 +62,6 @@ const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
             />
           </div>
 
-          {/* Indicador de Carga o Error */}
           {cargando && (
             <div className="text-center py-5">
               <Spinner animation="border" variant="info" />
@@ -70,7 +75,6 @@ const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
             </Alert>
           )}
 
-          {/* Listado de Productos */}
           {!cargando && !error && (
             <Row className="g-4">
               {productosFiltrados.length > 0 ? (
