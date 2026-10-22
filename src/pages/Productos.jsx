@@ -12,7 +12,7 @@ const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
 
   // Petición a la API PHP de XAMPP al montar el componente
   useEffect(() => {
-    fetch('http://localhost/pixelcraft-api/obtener_productos.php')
+    fetch('http://localhost:3308/pixelcraft-api/obtener_productos.php')
       .then((res) => {
         if (!res.ok) {
           throw new Error('Error en la respuesta del servidor');
