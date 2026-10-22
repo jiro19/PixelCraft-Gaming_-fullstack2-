@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Button, Form, Card, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Table, Button, Form, Card, Row, Col, Spinner, Badge } from 'react-bootstrap';
 import HeaderNavbar from '../../components/organisms/HeaderNavbar';
 import Footer from '../../components/organisms/Footer';
 
 const AdminProductos = ({ totalItemsCarrito }) => {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [edicion, setEdicion] = useState({}); // Controla qué fila se está editando
   const [nuevoProducto, setNuevoProducto] = useState({
     nombre: '',
     precio: '',
@@ -21,7 +22,7 @@ const AdminProductos = ({ totalItemsCarrito }) => {
         setProductos(data);
         setCargando(false);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error('Error al cargar productos:', err));
   };
 
   useEffect(() => {
@@ -36,29 +37,88 @@ const AdminProductos = ({ totalItemsCarrito }) => {
   };
 
   const handleAgregar = (e) => {
-  e.preventDefault();
-  if (!nuevoProducto.nombre || !nuevoProducto.precio) return;
+    e.preventDefault();
+    if (!nuevoProducto.nombre || !nuevoProducto.precio) return;
 
-  fetch('http://localhost/pixelcraft-api/agregar_producto.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(nuevoProducto)
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.success) {
-        cargarProductos(); // Recarga la tabla con los datos actualizados
-        setNuevoProducto({ nombre: '', precio: '', stock: '', categoria: 'Periféricos', imagen: '' });
-      } else {
-        alert('Error al guardar: ' + data.message);
-      }
+    fetch('http://localhost/pixelcraft-api/agregar_productos.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevoProducto)
     })
-    .catch((err) => {
-      console.error('Error al guardar en BD:', err);
-      alert('Ocurrió un error al conectar con la API de PHP.');
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          cargarProductos();
+          setNuevoProducto({ nombre: '', precio: '', stock: '', categoria: 'Periféricos', imagen: '' });
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch((err) => console.error('Error al guardar:', err));
+  };
+
+  // Manejar cambios en la edición inline de stock y precio
+  const handleEditChange = (id, campo, valor) => {
+    setEdicion({
+      ...edicion,
+      [id]: {
+        ...edicion[id],
+        [campo]: valor
+      }
     });
+  };
+
+  // Guardar modificaciones en MySQL
+  const handleGuardarModificacion = (producto) => {
+    const datosEditados = edicion[producto.id] || {};
+    const nuevoStock = datosEditados.stock !== undefined ? datosEditados.stock : producto.stock;
+    const nuevoPrecio = datosEditados.precio !== undefined ? datosEditados.precio : producto.precio;
+
+    fetch('http://localhost/pixelcraft-api/actualizar_producto.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accion: 'actualizar',
+        id: producto.id,
+        stock: nuevoStock,
+        precio: nuevoPrecio
+      })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          cargarProductos();
+          const copia = { ...edicion };
+          delete copia[producto.id];
+          setEdicion(copia);
+        } else {
+          alert('Error al actualizar: ' + data.message);
+        }
+      })
+      .catch((err) => console.error('Error:', err));
+  };
+
+  // Eliminar producto de MySQL
+  const handleEliminar = (id) => {
+    if (!window.confirm('¿Seguro que deseas eliminar este producto de la base de datos?')) return;
+
+    fetch('http://localhost/pixelcraft-api/actualizar_producto.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accion: 'eliminar',
+        id: id
+      })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          cargarProductos();
+        } else {
+          alert('Error al eliminar: ' + data.message);
+        }
+      })
+      .catch((err) => console.error('Error:', err));
   };
 
   return (
@@ -69,6 +129,7 @@ const AdminProductos = ({ totalItemsCarrito }) => {
         <Container>
           <h1 className="fw-bold text-warning mb-4">Mantenedor de Productos (MySQL)</h1>
 
+          {/* Formulario Agregar */}
           <Card className="bg-secondary text-white p-4 mb-4 border-0 shadow">
             <h4 className="text-info mb-3">Agregar Nuevo Producto a MySQL</h4>
             <Form onSubmit={handleAgregar}>
@@ -121,8 +182,11 @@ const AdminProductos = ({ totalItemsCarrito }) => {
             </Form>
           </Card>
 
+          {/* Tabla con Edición y Eliminación */}
           {cargando ? (
-            <Spinner animation="border" variant="warning" />
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="warning" />
+            </div>
           ) : (
             <Table variant="dark" hover responsive className="align-middle border-secondary">
               <thead>
@@ -130,20 +194,61 @@ const AdminProductos = ({ totalItemsCarrito }) => {
                   <th>ID</th>
                   <th>Código</th>
                   <th>Nombre</th>
-                  <th>Precio</th>
-                  <th>Stock</th>
+                  <th style={{ width: '140px' }}>Precio ($)</th>
+                  <th style={{ width: '120px' }}>Stock</th>
+                  <th className="text-center" style={{ width: '180px' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {productos.map((p) => (
-                  <tr key={p.id}>
-                    <td>{p.id}</td>
-                    <td>{p.codigo}</td>
-                    <td>{p.nombre}</td>
-                    <td>${Number(p.precio).toLocaleString('es-CL')}</td>
-                    <td>{p.stock}</td>
-                  </tr>
-                ))}
+                {productos.map((p) => {
+                  const editandoFila = edicion[p.id] !== undefined;
+                  const precioVal = editandoFila && edicion[p.id].precio !== undefined ? edicion[p.id].precio : p.precio;
+                  const stockVal = editandoFila && edicion[p.id].stock !== undefined ? edicion[p.id].stock : p.stock;
+
+                  return (
+                    <tr key={p.id}>
+                      <td>{p.id}</td>
+                      <td><Badge bg="secondary">{p.codigo}</Badge></td>
+                      <td>{p.nombre}</td>
+                      <td>
+                        <Form.Control
+                          type="number"
+                          size="sm"
+                          value={precioVal}
+                          onChange={(e) => handleEditChange(p.id, 'precio', e.target.value)}
+                          className="bg-dark text-white border-secondary"
+                        />
+                      </td>
+                      <td>
+                        <Form.Control
+                          type="number"
+                          size="sm"
+                          value={stockVal}
+                          onChange={(e) => handleEditChange(p.id, 'stock', e.target.value)}
+                          className="bg-dark text-white border-secondary"
+                        />
+                      </td>
+                      <td className="text-center">
+                        <div className="d-flex gap-2 justify-content-center">
+                          <Button 
+                            variant="success" 
+                            size="sm"
+                            onClick={() => handleGuardarModificacion(p)}
+                          >
+                            Guardar
+                          </Button>
+                          <Button 
+                            variant="danger" 
+                            size="sm"
+                            onClick={() => handleEliminar(p.id)}
+                          >
+                            Eliminar
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </Table>
           )}
