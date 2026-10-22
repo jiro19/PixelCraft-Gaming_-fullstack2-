@@ -20,9 +20,17 @@ const Carrito = ({ carrito, setCarrito, totalItemsCarrito }) => {
   };
 
   const procesarPago = () => {
-    if (carrito.length === 0) return;
-    setCarrito([]); // Limpiar carrito tras compra exitosa
-    navigate('/pago-exitoso'); // Redirigir a vista exigida en la pauta
+  fetch('http://localhost/pixelcraft-api/descontar_stock.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(carrito)
+  })
+    .then((res) => res.json())
+    .then(() => {
+      setCarrito([]); // Limpiar carrito
+      navigate('/pago-exitoso'); // Redirigir
+    })
+    .catch((err) => console.error('Error al descontar stock:', err));
   };
 
   return (
