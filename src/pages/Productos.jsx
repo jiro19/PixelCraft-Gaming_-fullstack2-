@@ -1,17 +1,38 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Form } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Form, Spinner, Alert } from 'react-bootstrap';
 import HeaderNavbar from '../components/organisms/HeaderNavbar';
 import Footer from '../components/organisms/Footer';
 import ProductCard from '../components/molecules/ProductCard';
-import { productosIniciales } from '../data/productosData';
 
 const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
-  const [productos] = useState(productosIniciales);
+  const [productos, setProductos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
   const [filtro, setFiltro] = useState('');
 
-  const productosFiltrados = productos.filter(p => 
-    p.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-    p.categoria.toLowerCase().includes(filtro.toLowerCase())
+  // Petición a la API PHP de XAMPP al montar el componente
+  useEffect(() => {
+    fetch('http://localhost/pixelcraft-api/obtener_productos.php')
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Error en la respuesta del servidor');
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setProductos(data);
+        setCargando(false);
+      })
+      .catch((err) => {
+        console.error('Error al conectar con XAMPP:', err);
+        setError('No se pudo conectar con la base de datos de XAMPP.');
+        setCargando(false);
+      });
+  }, []);
+
+  const productosFiltrados = productos.filter((p) =>
+    (p.nombre || '').toLowerCase().includes(filtro.toLowerCase()) ||
+    (p.categoria || '').toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
@@ -35,24 +56,41 @@ const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
             />
           </div>
 
-          <Row className="g-4">
-            {productosFiltrados.length > 0 ? (
-              productosFiltrados.map(producto => (
-                <Col key={producto.id} sm={6} md={4} lg={3}>
-                  <ProductCard 
-                    producto={producto} 
-                    onAgregarAlCarrito={agregarAlCarrito} 
-                  />
+          {/* Indicador de Carga o Error */}
+          {cargando && (
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="info" />
+              <p className="mt-2 text-muted">Cargando productos desde la base de datos...</p>
+            </div>
+          )}
+
+          {error && (
+            <Alert variant="danger" className="text-center">
+              {error}
+            </Alert>
+          )}
+
+          {/* Listado de Productos */}
+          {!cargando && !error && (
+            <Row className="g-4">
+              {productosFiltrados.length > 0 ? (
+                productosFiltrados.map((producto) => (
+                  <Col key={producto.id} sm={6} md={4} lg={3}>
+                    <ProductCard 
+                      producto={producto} 
+                      onAgregarAlCarrito={agregarAlCarrito} 
+                    />
+                  </Col>
+                ))
+              ) : (
+                <Col xs={12}>
+                  <div className="text-center py-5 text-muted">
+                    <p className="fs-5">No se encontraron productos coincidentes.</p>
+                  </div>
                 </Col>
-              ))
-            ) : (
-              <Col xs={12}>
-                <div className="text-center py-5 text-muted">
-                  <p className="fs-5">No se encontraron productos coincidentes.</p>
-                </div>
-              </Col>
-            )}
-          </Row>
+              )}
+            </Row>
+          )}
         </Container>
       </main>
 
