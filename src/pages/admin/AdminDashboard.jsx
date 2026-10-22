@@ -16,7 +16,7 @@ const AdminDashboard = ({ totalItemsCarrito }) => {
             <Col md={6}>
               <Card className="bg-secondary text-white border-0 shadow">
                 <Card.Body className="p-4 text-center">
-                  <h3>Mantenedor de Productos</h3>
+                  <h3>Mantenedor de Productos </h3>
                   <p className="text-muted">Agregar, editar o eliminar productos del catálogo.</p>
                   <Link to="/admin/productos" className="btn btn-warning fw-bold">
                     Gestionar Productos

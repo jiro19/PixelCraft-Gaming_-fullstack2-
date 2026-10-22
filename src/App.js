@@ -12,6 +12,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProductos from './pages/admin/AdminProductos';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
+import Contacto from './pages/Contacto';
 function App() {
   // Estado global del carrito inicializado con localStorage
   const [carrito, setCarrito] = useState(() => {
@@ -84,6 +85,7 @@ function App() {
         <Route path="/admin/productos" element={<AdminProductos totalItemsCarrito={totalItemsCarrito} />} />
         <Route path="/login" element={<Login totalItemsCarrito={totalItemsCarrito} />} />
 <Route path="/registro" element={<Registro totalItemsCarrito={totalItemsCarrito} />} />
+<Route path="/contacto" element={<Contacto totalItemsCarrito={totalItemsCarrito} />} />      
       </Routes>
     </Router>
   );
