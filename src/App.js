@@ -13,19 +13,26 @@ import AdminProductos from './pages/admin/AdminProductos';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Contacto from './pages/Contacto';
+
+// Componente para proteger rutas de Administración
+const RutaAdmin = ({ children }) => {
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  if (!usuario || (usuario.rol !== 'ADMIN' && usuario.rol !== 'VENDEDOR')) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 function App() {
-  // Estado global del carrito inicializado con localStorage
   const [carrito, setCarrito] = useState(() => {
     const savedCart = localStorage.getItem('pixelcraft_cart');
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  // Guardar en localStorage cada vez que el carrito cambie
   useEffect(() => {
     localStorage.setItem('pixelcraft_cart', JSON.stringify(carrito));
   }, [carrito]);
 
-  // Función global para agregar un producto al carrito
   const agregarAlCarrito = (producto) => {
     setCarrito(prevCarrito => {
       const existe = prevCarrito.find(item => item.id === producto.id);
@@ -40,52 +47,58 @@ function App() {
     });
   };
 
-  // Cálculo total de ítems agregados para la insignia (Badge) del Navbar
   const totalItemsCarrito = carrito.reduce((sum, item) => sum + item.cantidad, 0);
 
   return (
     <Router>
       <Routes>
         {/* Rutas Públicas */}
-        <Route 
-          path="/" 
-          element={<Home totalItemsCarrito={totalItemsCarrito} />} 
-        />
-        <Route 
-          path="/productos" 
+        <Route path="/" element={<Home totalItemsCarrito={totalItemsCarrito} />} />
+        <Route
+          path="/productos"
           element={
-            <Productos 
-              totalItemsCarrito={totalItemsCarrito} 
-              agregarAlCarrito={agregarAlCarrito} 
+            <Productos
+              totalItemsCarrito={totalItemsCarrito}
+              agregarAlCarrito={agregarAlCarrito}
             />
-          } 
+          }
         />
-        <Route 
-          path="/carrito" 
+        <Route
+          path="/carrito"
           element={
-            <Carrito 
-              carrito={carrito} 
-              setCarrito={setCarrito} 
-              totalItemsCarrito={totalItemsCarrito} 
+            <Carrito
+              carrito={carrito}
+              setCarrito={setCarrito}
+              totalItemsCarrito={totalItemsCarrito}
             />
-          } 
+          }
         />
-        <Route 
-          path="/pago-exitoso" 
-          element={<PagoExitoso totalItemsCarrito={totalItemsCarrito} />} 
+        <Route path="/pago-exitoso" element={<PagoExitoso totalItemsCarrito={totalItemsCarrito} />} />
+        <Route path="/pago-fallido" element={<PagoFallido totalItemsCarrito={totalItemsCarrito} />} />
+        <Route path="/login" element={<Login totalItemsCarrito={totalItemsCarrito} />} />
+        <Route path="/registro" element={<Registro totalItemsCarrito={totalItemsCarrito} />} />
+        <Route path="/contacto" element={<Contacto totalItemsCarrito={totalItemsCarrito} />} />
+
+        {/* Rutas Protegidas (ADMIN / VENDEDOR) */}
+        <Route
+          path="/admin"
+          element={
+            <RutaAdmin>
+              <AdminDashboard totalItemsCarrito={totalItemsCarrito} />
+            </RutaAdmin>
+          }
         />
-        <Route 
-          path="/pago-fallido" 
-          element={<PagoFallido totalItemsCarrito={totalItemsCarrito} />} 
+        <Route
+          path="/admin/productos"
+          element={
+            <RutaAdmin>
+              <AdminProductos totalItemsCarrito={totalItemsCarrito} />
+            </RutaAdmin>
+          }
         />
 
-        {/* Redirección por defecto para rutas no encontradas */}
+        {/* Redirección por defecto */}
         <Route path="*" element={<Navigate to="/" replace />} />
-        <Route path="/admin" element={<AdminDashboard totalItemsCarrito={totalItemsCarrito} />} />
-        <Route path="/admin/productos" element={<AdminProductos totalItemsCarrito={totalItemsCarrito} />} />
-        <Route path="/login" element={<Login totalItemsCarrito={totalItemsCarrito} />} />
-<Route path="/registro" element={<Registro totalItemsCarrito={totalItemsCarrito} />} />
-<Route path="/contacto" element={<Contacto totalItemsCarrito={totalItemsCarrito} />} />      
       </Routes>
     </Router>
   );

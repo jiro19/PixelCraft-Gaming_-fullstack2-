@@ -1,13 +1,16 @@
-import React from 'react';
-import { Container, Table, Card } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Container, Table, Card, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import HeaderNavbar from '../components/organisms/HeaderNavbar';
 import Footer from '../components/organisms/Footer';
 import CartItemRow from '../components/molecules/CartItemRow';
 import ButtonPrimary from '../components/atoms/ButtonPrimary';
+import { generarBoleta } from '../services/api';
 
 const Carrito = ({ carrito, setCarrito, totalItemsCarrito }) => {
   const navigate = useNavigate();
+  const [procesando, setProcesando] = useState(false);
+  const [mensajeError, setMensajeError] = useState('');
 
   const totalPagar = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
 
@@ -19,18 +22,31 @@ const Carrito = ({ carrito, setCarrito, totalItemsCarrito }) => {
     setCarrito([]);
   };
 
-  const procesarPago = () => {
-  fetch('http://localhost/pixelcraft-api/descontar_stock.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(carrito)
-  })
-    .then((res) => res.json())
-    .then(() => {
-      setCarrito([]); // Limpiar carrito
-      navigate('/pago-exitoso'); // Redirigir
-    })
-    .catch((err) => console.error('Error al descontar stock:', err));
+  const procesarPago = async () => {
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    if (!usuario) {
+      setMensajeError('Debes iniciar sesión para completar tu compra.');
+      setTimeout(() => navigate('/login'), 1500);
+      return;
+    }
+
+    const items = carrito.map(item => ({
+      productoId: item.id,
+      cantidad: item.cantidad
+    }));
+
+    try {
+      setProcesando(true);
+      setMensajeError('');
+      await generarBoleta(usuario.id, items);
+      setCarrito([]);
+      navigate('/pago-exitoso');
+    } catch (err) {
+      console.error('Error al generar boleta:', err);
+      navigate('/pago-fallido');
+    } finally {
+      setProcesando(false);
+    }
   };
 
   return (
@@ -40,6 +56,8 @@ const Carrito = ({ carrito, setCarrito, totalItemsCarrito }) => {
       <main className="flex-grow-1 py-5">
         <Container>
           <h1 className="fw-bold text-info mb-4">Tu Carrito de Compras</h1>
+
+          {mensajeError && <Alert variant="warning">{mensajeError}</Alert>}
 
           {carrito.length === 0 ? (
             <Card className="bg-secondary text-center p-5 border-0">
@@ -83,11 +101,11 @@ const Carrito = ({ carrito, setCarrito, totalItemsCarrito }) => {
                     <span className="fs-2 fw-bold text-info">${totalPagar.toLocaleString('es-CL')}</span>
                   </div>
                   <div className="d-flex gap-2">
-                    <ButtonPrimary variant="danger" onClick={vaciarCarrito}>
+                    <ButtonPrimary variant="danger" onClick={vaciarCarrito} disabled={procesando}>
                       Vaciar Carrito
                     </ButtonPrimary>
-                    <ButtonPrimary variant="success" onClick={procesarPago}>
-                      Proceder al Pago
+                    <ButtonPrimary variant="success" onClick={procesarPago} disabled={procesando}>
+                      {procesando ? 'Procesando...' : 'Proceder al Pago'}
                     </ButtonPrimary>
                   </div>
                 </div>

@@ -3,6 +3,7 @@ import { Container, Row, Col, Form, Spinner, Alert } from 'react-bootstrap';
 import HeaderNavbar from '../components/organisms/HeaderNavbar';
 import Footer from '../components/organisms/Footer';
 import ProductCard from '../components/molecules/ProductCard';
+import { obtenerProductos } from '../services/api';
 
 const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
   const [productos, setProductos] = useState([]);
@@ -11,34 +12,28 @@ const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
   const [filtro, setFiltro] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost/pixelcraft-api/obtener_productos.php')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error('Error en la respuesta del servidor');
-        }
-        return res.json();
-      })
+    obtenerProductos()
       .then((data) => {
-        // Mapeo para asegurar que precio e id sean numéricos
         const productosFormateados = data.map((p) => ({
           ...p,
           id: Number(p.id),
           precio: Number(p.precio),
-          stock: Number(p.stock)
+          stock: Number(p.stock),
+          categoriaNombre: p.categoria?.nombre || ''
         }));
         setProductos(productosFormateados);
         setCargando(false);
       })
       .catch((err) => {
-        console.error('Error al conectar con XAMPP:', err);
-        setError('No se pudo conectar con la base de datos de XAMPP.');
+        console.error('Error al conectar con Spring Boot:', err);
+        setError('No se pudo conectar con el servidor backend (puerto 8080).');
         setCargando(false);
       });
   }, []);
 
   const productosFiltrados = productos.filter((p) =>
     (p.nombre || '').toLowerCase().includes(filtro.toLowerCase()) ||
-    (p.categoria || '').toLowerCase().includes(filtro.toLowerCase())
+    (p.categoriaNombre || '').toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
@@ -65,7 +60,7 @@ const Productos = ({ totalItemsCarrito, agregarAlCarrito }) => {
           {cargando && (
             <div className="text-center py-5">
               <Spinner animation="border" variant="info" />
-              <p className="mt-2 text-muted">Cargando productos desde la base de datos...</p>
+              <p className="mt-2 text-muted">Cargando productos desde Neon...</p>
             </div>
           )}
 

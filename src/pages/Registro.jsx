@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import HeaderNavbar from '../components/organisms/HeaderNavbar';
 import Footer from '../components/organisms/Footer';
 import ButtonPrimary from '../components/atoms/ButtonPrimary';
+import { registrarUsuario } from '../services/api';
 
 const Registro = ({ totalItemsCarrito }) => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Registro = ({ totalItemsCarrito }) => {
     confirmPassword: ''
   });
   const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -23,7 +25,7 @@ const Registro = ({ totalItemsCarrito }) => {
     if (error) setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { nombre, email, password, confirmPassword } = formData;
 
@@ -42,9 +44,21 @@ const Registro = ({ totalItemsCarrito }) => {
       return;
     }
 
-    // Simulación de registro exitoso
-    setError('');
-    navigate('/login');
+    try {
+      setCargando(true);
+      setError('');
+      await registrarUsuario({
+        nombre,
+        email,
+        password,
+        rol: 'CLIENTE'
+      });
+      navigate('/login');
+    } catch (err) {
+      setError('No se pudo crear la cuenta. Es posible que el correo ya esté registrado.');
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -112,8 +126,8 @@ const Registro = ({ totalItemsCarrito }) => {
                   />
                 </Form.Group>
 
-                <ButtonPrimary type="submit" variant="info" className="w-100 mb-3">
-                  Registrarse
+                <ButtonPrimary type="submit" variant="info" className="w-100 mb-3" disabled={cargando}>
+                  {cargando ? 'Registrando...' : 'Registrarse'}
                 </ButtonPrimary>
 
                 <div className="text-center small text-muted">

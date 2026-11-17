@@ -4,11 +4,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import HeaderNavbar from '../components/organisms/HeaderNavbar';
 import Footer from '../components/organisms/Footer';
 import ButtonPrimary from '../components/atoms/ButtonPrimary';
+import { loginUsuario } from '../services/api';
 
 const Login = ({ totalItemsCarrito }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -18,11 +20,10 @@ const Login = ({ totalItemsCarrito }) => {
     if (error) setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password } = formData;
 
-    // Validación simple de campos obligatorios y formato
     if (!email || !password) {
       setError('Por favor completa todos los campos.');
       return;
@@ -33,9 +34,20 @@ const Login = ({ totalItemsCarrito }) => {
       return;
     }
 
-    // Simulación de autenticación exitosa
-    setError('');
-    navigate('/');
+    try {
+      setCargando(true);
+      setError('');
+      const data = await loginUsuario(email, password);
+      if (data.rol === 'ADMIN' || data.rol === 'VENDEDOR') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      setError('Correo o contraseña incorrectos.');
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -77,8 +89,8 @@ const Login = ({ totalItemsCarrito }) => {
                   />
                 </Form.Group>
 
-                <ButtonPrimary type="submit" variant="info" className="w-100 mb-3">
-                  Ingresar
+                <ButtonPrimary type="submit" variant="info" className="w-100 mb-3" disabled={cargando}>
+                  {cargando ? 'Ingresando...' : 'Ingresar'}
                 </ButtonPrimary>
 
                 <div className="text-center small text-muted">

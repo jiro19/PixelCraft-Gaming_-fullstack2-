@@ -2,31 +2,50 @@ import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Form, Card, Row, Col, Spinner, Badge } from 'react-bootstrap';
 import HeaderNavbar from '../../components/organisms/HeaderNavbar';
 import Footer from '../../components/organisms/Footer';
+import {
+  obtenerProductos,
+  obtenerCategorias,
+  crearProducto,
+  actualizarProducto,
+  eliminarProducto
+} from '../../services/api';
 
 const AdminProductos = ({ totalItemsCarrito }) => {
   const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [edicion, setEdicion] = useState({}); // Controla qué fila se está editando
+  const [edicion, setEdicion] = useState({});
   const [nuevoProducto, setNuevoProducto] = useState({
+    codigo: '',
     nombre: '',
     precio: '',
     stock: '',
-    categoria: 'Periféricos',
+    categoriaId: '',
+    descripcion: '',
     imagen: ''
   });
 
-  const cargarProductos = () => {
-    fetch('http://localhost/pixelcraft-api/obtener_productos.php')
-      .then((res) => res.json())
-      .then((data) => {
-        setProductos(data);
-        setCargando(false);
-      })
-      .catch((err) => console.error('Error al cargar productos:', err));
+  const cargarDatos = async () => {
+    try {
+      setCargando(true);
+      const [prods, cats] = await Promise.all([
+        obtenerProductos(),
+        obtenerCategorias()
+      ]);
+      setProductos(prods);
+      setCategorias(cats);
+      if (cats.length > 0 && !nuevoProducto.categoriaId) {
+        setNuevoProducto((prev) => ({ ...prev, categoriaId: cats[0].id }));
+      }
+    } catch (err) {
+      console.error('Error al cargar datos:', err);
+    } finally {
+      setCargando(false);
+    }
   };
 
   useEffect(() => {
-    cargarProductos();
+    cargarDatos();
   }, []);
 
   const handleInputChange = (e) => {
@@ -36,28 +55,35 @@ const AdminProductos = ({ totalItemsCarrito }) => {
     });
   };
 
-  const handleAgregar = (e) => {
+  const handleAgregar = async (e) => {
     e.preventDefault();
-    if (!nuevoProducto.nombre || !nuevoProducto.precio) return;
+    if (!nuevoProducto.nombre || !nuevoProducto.precio || !nuevoProducto.codigo) return;
 
-    fetch('http://localhost/pixelcraft-api/agregar_productos.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(nuevoProducto)
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          cargarProductos();
-          setNuevoProducto({ nombre: '', precio: '', stock: '', categoria: 'Periféricos', imagen: '' });
-        } else {
-          alert('Error: ' + data.message);
-        }
-      })
-      .catch((err) => console.error('Error al guardar:', err));
+    try {
+      await crearProducto({
+        codigo: nuevoProducto.codigo,
+        nombre: nuevoProducto.nombre,
+        precio: Number(nuevoProducto.precio),
+        stock: Number(nuevoProducto.stock),
+        descripcion: nuevoProducto.descripcion || 'Producto PixelCraft Gaming',
+        imagen: nuevoProducto.imagen || 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=500',
+        categoria: { id: Number(nuevoProducto.categoriaId) }
+      });
+      await cargarDatos();
+      setNuevoProducto({
+        codigo: '',
+        nombre: '',
+        precio: '',
+        stock: '',
+        categoriaId: categorias[0]?.id || '',
+        descripcion: '',
+        imagen: ''
+      });
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
-  // Manejar cambios en la edición inline de stock y precio
   const handleEditChange = (id, campo, valor) => {
     setEdicion({
       ...edicion,
@@ -68,57 +94,36 @@ const AdminProductos = ({ totalItemsCarrito }) => {
     });
   };
 
-  // Guardar modificaciones en MySQL
-  const handleGuardarModificacion = (producto) => {
+  const handleGuardarModificacion = async (producto) => {
     const datosEditados = edicion[producto.id] || {};
-    const nuevoStock = datosEditados.stock !== undefined ? datosEditados.stock : producto.stock;
-    const nuevoPrecio = datosEditados.precio !== undefined ? datosEditados.precio : producto.precio;
+    const nuevoStock = datosEditados.stock !== undefined ? Number(datosEditados.stock) : producto.stock;
+    const nuevoPrecio = datosEditados.precio !== undefined ? Number(datosEditados.precio) : producto.precio;
 
-    fetch('http://localhost/pixelcraft-api/actualizar_producto.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        accion: 'actualizar',
-        id: producto.id,
-        stock: nuevoStock,
-        precio: nuevoPrecio
-      })
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          cargarProductos();
-          const copia = { ...edicion };
-          delete copia[producto.id];
-          setEdicion(copia);
-        } else {
-          alert('Error al actualizar: ' + data.message);
-        }
-      })
-      .catch((err) => console.error('Error:', err));
+    try {
+      await actualizarProducto(producto.id, {
+        ...producto,
+        precio: nuevoPrecio,
+        stock: nuevoStock
+      });
+      await cargarDatos();
+      const copia = { ...edicion };
+      delete copia[producto.id];
+      setEdicion(copia);
+      alert('Producto actualizado en Neon.');
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
-  // Eliminar producto de MySQL
-  const handleEliminar = (id) => {
+  const handleEliminar = async (id) => {
     if (!window.confirm('¿Seguro que deseas eliminar este producto de la base de datos?')) return;
 
-    fetch('http://localhost/pixelcraft-api/actualizar_producto.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        accion: 'eliminar',
-        id: id
-      })
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          cargarProductos();
-        } else {
-          alert('Error al eliminar: ' + data.message);
-        }
-      })
-      .catch((err) => console.error('Error:', err));
+    try {
+      await eliminarProducto(id);
+      await cargarDatos();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   return (
@@ -127,14 +132,24 @@ const AdminProductos = ({ totalItemsCarrito }) => {
 
       <main className="flex-grow-1 py-5">
         <Container>
-          <h1 className="fw-bold text-warning mb-4">Mantenedor de Productos (MySQL)</h1>
+          <h1 className="fw-bold text-warning mb-4">Mantenedor de Productos (PostgreSQL Neon)</h1>
 
           {/* Formulario Agregar */}
           <Card className="bg-secondary text-white p-4 mb-4 border-0 shadow">
-            <h4 className="text-info mb-3">Agregar Nuevo Producto a MySQL</h4>
+            <h4 className="text-info mb-3">Agregar Nuevo Producto</h4>
             <Form onSubmit={handleAgregar}>
               <Row className="g-3">
-                <Col md={4}>
+                <Col md={2}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Código (ej. PER-02)"
+                    name="codigo"
+                    value={nuevoProducto.codigo}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Col>
+                <Col md={3}>
                   <Form.Control
                     type="text"
                     placeholder="Nombre del Producto"
@@ -143,6 +158,20 @@ const AdminProductos = ({ totalItemsCarrito }) => {
                     onChange={handleInputChange}
                     required
                   />
+                </Col>
+                <Col md={2}>
+                  <Form.Select
+                    name="categoriaId"
+                    value={nuevoProducto.categoriaId}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    {categorias.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.nombre}
+                      </option>
+                    ))}
+                  </Form.Select>
                 </Col>
                 <Col md={2}>
                   <Form.Control
@@ -154,7 +183,7 @@ const AdminProductos = ({ totalItemsCarrito }) => {
                     required
                   />
                 </Col>
-                <Col md={2}>
+                <Col md={1}>
                   <Form.Control
                     type="number"
                     placeholder="Stock"
@@ -164,7 +193,7 @@ const AdminProductos = ({ totalItemsCarrito }) => {
                     required
                   />
                 </Col>
-                <Col md={4}>
+                <Col md={2}>
                   <Form.Control
                     type="text"
                     placeholder="URL Imagen"
@@ -194,6 +223,7 @@ const AdminProductos = ({ totalItemsCarrito }) => {
                   <th>ID</th>
                   <th>Código</th>
                   <th>Nombre</th>
+                  <th>Categoría</th>
                   <th style={{ width: '140px' }}>Precio ($)</th>
                   <th style={{ width: '120px' }}>Stock</th>
                   <th className="text-center" style={{ width: '180px' }}>Acciones</th>
@@ -210,6 +240,7 @@ const AdminProductos = ({ totalItemsCarrito }) => {
                       <td>{p.id}</td>
                       <td><Badge bg="secondary">{p.codigo}</Badge></td>
                       <td>{p.nombre}</td>
+                      <td>{p.categoria?.nombre || 'Sin categoría'}</td>
                       <td>
                         <Form.Control
                           type="number"
