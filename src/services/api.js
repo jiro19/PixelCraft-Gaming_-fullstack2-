@@ -1,6 +1,5 @@
-const API_URL = "http://10.222.1.62:8080/api/v1";
+const API_URL = "http://172.25.240.1:8080/api/v1";
 
-// Obtiene los headers con el Token JWT si el usuario inició sesión
 const getHeaders = (auth = false) => {
   const headers = {
     "Content-Type": "application/json",
@@ -14,7 +13,6 @@ const getHeaders = (auth = false) => {
   return headers;
 };
 
-// --- AUTENTICACIÓN ---
 export const loginUsuario = async (email, password) => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
@@ -23,7 +21,7 @@ export const loginUsuario = async (email, password) => {
   });
   if (!response.ok) throw new Error("Credenciales incorrectas");
   const data = await response.json();
-  // Guardar sesión y rol (ADMIN, VENDEDOR o CLIENTE)
+
   localStorage.setItem("token", data.token);
   localStorage.setItem("usuario", JSON.stringify(data));
   return data;
@@ -44,7 +42,7 @@ export const cerrarSesion = () => {
   localStorage.removeItem("usuario");
 };
 
-// --- CATÁLOGO (Público) ---
+
 export const obtenerProductos = async () => {
   const response = await fetch(`${API_URL}/productos`);
   if (!response.ok) throw new Error("Error al cargar productos");
@@ -57,7 +55,7 @@ export const obtenerCategorias = async () => {
   return response.json();
 };
 
-// --- GESTIÓN DE PRODUCTOS (Requiere Token ADMIN o VENDEDOR) ---
+
 export const crearProducto = async (producto) => {
   const response = await fetch(`${API_URL}/productos`, {
     method: "POST",
@@ -84,7 +82,7 @@ export const eliminarProducto = async (id) => {
   if (!response.ok) throw new Error("Solo ADMIN puede eliminar productos");
 };
 
-// --- BOLETAS / CARRITO (Requiere Token) ---
+
 export const generarBoleta = async (usuarioId, items) => {
   const response = await fetch(`${API_URL}/boletas`, {
     method: "POST",

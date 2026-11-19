@@ -7,7 +7,7 @@ const Footer = () => {
     <footer className="bg-dark text-white py-4 mt-auto border-top border-secondary">
       <Container>
         <Row className="gy-3">
-          {/* Columna 1: Nombre de la tienda y descripción */}
+          {}
           <Col md={4}>
             <h5 className="text-info fw-bold">PixelCraft Gaming</h5>
             <p className="text-white mb-0" style={{ opacity: 0.9 }}>
@@ -15,7 +15,7 @@ const Footer = () => {
             </p>
           </Col>
 
-          {/* Columna 2: Enlaces de Navegación */}
+          {}
           <Col md={4}>
             <h5 className="text-white fw-bold mb-2">Navegación</h5>
             <ul className="list-unstyled mb-0">
@@ -37,7 +37,7 @@ const Footer = () => {
             </ul>
           </Col>
 
-          {/* Columna 3: Información de la asignatura */}
+          {}
           <Col md={4}>
             <h5 className="text-white fw-bold mb-2">Evaluación Fullstack II</h5>
             <p className="text-white mb-0" style={{ opacity: 0.9 }}>

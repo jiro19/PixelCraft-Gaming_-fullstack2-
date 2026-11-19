@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-// Páginas Principales de la Tienda
+
 import Home from './pages/Home';
 import Productos from './pages/Productos';
 import Carrito from './pages/Carrito';
@@ -14,7 +14,6 @@ import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Contacto from './pages/Contacto';
 
-// Componente para proteger rutas de Administración
 const RutaAdmin = ({ children }) => {
   const usuario = JSON.parse(localStorage.getItem('usuario'));
   if (!usuario || (usuario.rol !== 'ADMIN' && usuario.rol !== 'VENDEDOR')) {

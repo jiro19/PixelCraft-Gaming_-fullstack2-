@@ -22,11 +22,10 @@ const Contacto = ({ totalItemsCarrito }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simulación de envío de formulario de contacto
     if (formData.nombre && formData.email && formData.mensaje) {
       setEnviado(true);
       setFormData({ nombre: '', email: '', asunto: '', mensaje: '' });
-      setTimeout(() => setEnviado(false), 5000); // Ocultar mensaje tras 5s
+      setTimeout(() => setEnviado(false), 5000); 
     }
   };
 
@@ -46,7 +45,7 @@ const Contacto = ({ totalItemsCarrito }) => {
           </Row>
 
           <Row className="g-4 justify-content-center">
-            {/* Formulario de contacto */}
+            {}
             <Col lg={7}>
               <Card className="bg-secondary text-white p-4 border-0 shadow">
                 <h4 className="text-info mb-3">Déjanos un mensaje</h4>
@@ -129,7 +128,7 @@ const Contacto = ({ totalItemsCarrito }) => {
               </Card>
             </Col>
 
-            {/* Información de contacto de la tienda */}
+            {}
             <Col lg={5}>
               <Card className="bg-secondary text-white p-4 border-0 shadow h-100 d-flex flex-column justify-content-between">
                 <div>

@@ -4,7 +4,6 @@ body {
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Fondo Hero Gaming con degradado radial */
 .hero-gaming {
   background: radial-gradient(circle at top center, #162238 0%, #0b0e14 75%);
   border-bottom: 1px solid rgba(13, 202, 240, 0.25);
@@ -19,7 +18,7 @@ body {
   text-shadow: 0 0 30px rgba(13, 202, 240, 0.25);
 }
 
-/* Tarjetas modernas con brillo al pasar el mouse */
+
 .card-gaming {
   background: linear-gradient(145deg, #131926, #0f141f);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -33,7 +32,7 @@ body {
   box-shadow: 0 10px 25px rgba(13, 202, 240, 0.18);
 }
 
-/* Botón con brillo neón */
+
 .btn-neon {
   background: linear-gradient(90deg, #0dcaf0, #0284c7);
   border: none;

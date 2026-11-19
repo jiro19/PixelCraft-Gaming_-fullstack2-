@@ -5,7 +5,6 @@ import App from './App';
 describe('Pruebas Unitarias de Integración - App Principal', () => {
   test('Renderiza los títulos de PixelCraft Gaming en la interfaz', () => {
     render(<App />);
-    // Usamos getAllByText para validar que el nombre de la marca existe en la página
     const elementosTitulo = screen.getAllByText(/PixelCraft Gaming/i);
     expect(elementosTitulo.length).toBeGreaterThan(0);
   });
