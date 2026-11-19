@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080/api/v1";
+const API_URL = "http://10.222.1.62:8080/api/v1";
 
 // Obtiene los headers con el Token JWT si el usuario inició sesión
 const getHeaders = (auth = false) => {

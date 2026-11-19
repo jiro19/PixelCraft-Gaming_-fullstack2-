@@ -1,13 +1,49 @@
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: #0b0e14;
+  color: #f8fafc;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Fondo Hero Gaming con degradado radial */
+.hero-gaming {
+  background: radial-gradient(circle at top center, #162238 0%, #0b0e14 75%);
+  border-bottom: 1px solid rgba(13, 202, 240, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-title {
+  background: linear-gradient(90deg, #0dcaf0, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(13, 202, 240, 0.25);
+}
+
+/* Tarjetas modernas con brillo al pasar el mouse */
+.card-gaming {
+  background: linear-gradient(145deg, #131926, #0f141f);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-gaming:hover {
+  transform: translateY(-6px);
+  border-color: #0dcaf0;
+  box-shadow: 0 10px 25px rgba(13, 202, 240, 0.18);
+}
+
+/* Botón con brillo neón */
+.btn-neon {
+  background: linear-gradient(90deg, #0dcaf0, #0284c7);
+  border: none;
+  color: #05080f !important;
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(13, 202, 240, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-neon:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 22px rgba(13, 202, 240, 0.6);
 }
